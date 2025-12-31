@@ -1,3 +1,12 @@
-Game Project/Library/Artifacts/00/00925e510750e5d24ccd0d63a59c2618
-/Game Project/Library
-/Game Project/Logs
+# Chặn mọi thứ trong các thư mục rác bất kể nó nằm ở đâu
+**/[Ll]ibrary/
+**/[Tt]emp/
+**/[Oo]bj/
+**/[Ll]ogs/
+
+# Chặn file rác của Visual Studio
+**/.vs/
+**/*.csproj
+**/*.sln
+**/*.user
+**/*.userprefs
