@@ -2,69 +2,87 @@
 
 public class CoinSpawner : MonoBehaviour
 {
-    [Header("Cài đặt")]
+    [Header("Cài đặt chung")]
     public GameObject coinPrefab;
     public int numberOfCoins = 20;
-    public float coinOffset = 0.5f;
+    public float coinOffset = 1.0f;
+    public float minHeight = -6.5f; // Độ cao tối thiểu để sinh xu
 
-    [Header("Quan trọng: Chọn Layer Đất")]
-    public LayerMask whatIsGround;
+    [Header("Bộ lọc Layer")]
+    public LayerMask whatIsGround;   // Layer của Đất (Ground)
+    public LayerMask whatIsObstacle; // Layer của Vật cản (Cây, Đá, Nhà...)
+
+    [Header("Tinh chỉnh vùng trống")]
+    [Tooltip("Bán kính vùng an toàn. Nếu trong vòng tròn này có cây/đá, sẽ không sinh xu.")]
+    public float checkRadius = 1.0f;
 
     private BoxCollider spawnArea;
 
     void Start()
     {
         spawnArea = GetComponent<BoxCollider>();
-        if (spawnArea == null)
-        {
-            Debug.LogError("LỖI: CoinSpawner chưa có BoxCollider!");
-            return;
-        }
         SpawnCoins();
     }
 
     void SpawnCoins()
     {
         int successCount = 0;
-        int maxAttempts = numberOfCoins * 10;
+        int attempts = 0;
+        int maxAttempts = numberOfCoins * 20; // Tăng số lần thử lên vì giờ điều kiện khó hơn
 
-        for (int i = 0; i < maxAttempts; i++)
+        while (successCount < numberOfCoins && attempts < maxAttempts)
         {
-            if (successCount >= numberOfCoins) break;
-
             if (SpawnSingleCoin())
             {
                 successCount++;
             }
+            attempts++;
         }
 
-        Debug.Log($"Kết quả: Đã sinh được {successCount} / {numberOfCoins} đồng xu.");
+        Debug.Log($"Đã sinh được {successCount} / {numberOfCoins} đồng xu.");
     }
 
     bool SpawnSingleCoin()
     {
         Bounds bounds = spawnArea.bounds;
 
-        // Random vị trí
+        // 1. Random vị trí
         float x = Random.Range(bounds.min.x, bounds.max.x);
         float z = Random.Range(bounds.min.z, bounds.max.z);
-
-        // Điểm bắt đầu bắn tia
         Vector3 rayOrigin = new Vector3(x, bounds.max.y, z);
 
-        // Vẽ tia laser màu đỏ trong Scene để bạn nhìn thấy (tồn tại trong 10 giây)
-        Debug.DrawRay(rayOrigin, Vector3.down * bounds.size.y, Color.red, 10f);
-
+        // 2. Bắn tia tìm Đất
         if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hitInfo, bounds.size.y, whatIsGround, QueryTriggerInteraction.Ignore))
         {
             Vector3 spawnPos = hitInfo.point + Vector3.up * coinOffset;
-            Instantiate(coinPrefab, spawnPos, coinPrefab.transform.rotation);
+            // Nếu điểm chạm đất (hitInfo.point.y)
+            if (hitInfo.point.y < minHeight)
+            {
+                return false;
+            }
 
-            // Vẽ tia màu xanh lá nếu bắn TRÚNG đất
-            Debug.DrawLine(rayOrigin, hitInfo.point, Color.green, 10f);
+            // --- KIỂM TRA VẬT CẢN ---
+
+            // Kiểm tra xem nó có chạm vào "whatIsObstacle" không
+            if (Physics.CheckSphere(spawnPos, checkRadius, whatIsObstacle))
+            {
+                return false; // Bị vướng cây/đá -> Hủy bỏ, không sinh
+            }
+
+            // --- NẾU KHÔNG VƯỚNG GÌ THÌ MỚI SINH ---
+            Instantiate(coinPrefab, spawnPos, coinPrefab.transform.rotation);
             return true;
         }
 
         return false;
+    }
+
+    // Vẽ hình cầu trong Scene để bạn dễ hình dung vùng kiểm tra (Chỉ hiện khi không Play)
+    void OnDrawGizmosSelected()
+    {
+        if (spawnArea == null) return;
+        Gizmos.color = Color.red;
+        // Vẽ minh họa một quả cầu check tại tâm của hộp
+        Gizmos.DrawWireSphere(spawnArea.bounds.center, checkRadius);
     }
 }
