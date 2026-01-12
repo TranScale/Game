@@ -46,6 +46,12 @@ public class GameManager : MonoBehaviour
 
         // Dừng thời gian lại (Mọi thứ đứng yên)
         Time.timeScale = 0f;
+
+        // Phát âm thanh chiến thắng
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayWinSound();
+        }
     }
 
     public void GameOver()
@@ -54,15 +60,20 @@ public class GameManager : MonoBehaviour
 
         isGameEnded = true;
         Debug.Log("Thất bại!");
-
         // Hiện màn hình thua
         if (losePanel != null) losePanel.SetActive(true);
 
         // Dừng thời gian
         Time.timeScale = 0f;
+
+        // Phát âm thanh thua cuộc
+        if (AudioManager.instance != null)
+        {
+            AudioManager.instance.PlayLoseSound();
+        }
     }
 
-    // Hàm để nút bấm gọi (sẽ làm ở Bước 4)
+    // Hàm để nút bấm gọi 
     public void RestartGame()
     {
         Time.timeScale = 1f; // Trả lại thời gian bình thường

@@ -2,6 +2,9 @@
 
 public class CoinSpawner : MonoBehaviour
 {
+    // Biến này giúp các script khác biết tổng số xu để tính Thắng/Thua
+    public static int MaxCoinsInLevel;
+
     [Header("Cài đặt chung")]
     public GameObject coinPrefab;
     public int numberOfCoins = 20;
@@ -28,7 +31,7 @@ public class CoinSpawner : MonoBehaviour
     {
         int successCount = 0;
         int attempts = 0;
-        int maxAttempts = numberOfCoins * 20; // Tăng số lần thử lên vì giờ điều kiện khó hơn
+        int maxAttempts = numberOfCoins * 20; // Tăng số lần thử lên
 
         while (successCount < numberOfCoins && attempts < maxAttempts)
         {
@@ -39,7 +42,9 @@ public class CoinSpawner : MonoBehaviour
             attempts++;
         }
 
-        Debug.Log($"Đã sinh được {successCount} / {numberOfCoins} đồng xu.");
+        // Cập nhật tổng số xu thực tế sinh được vào biến tĩnh
+        MaxCoinsInLevel = successCount;
+
     }
 
     bool SpawnSingleCoin()
@@ -55,6 +60,7 @@ public class CoinSpawner : MonoBehaviour
         if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hitInfo, bounds.size.y, whatIsGround, QueryTriggerInteraction.Ignore))
         {
             Vector3 spawnPos = hitInfo.point + Vector3.up * coinOffset;
+
             // Nếu điểm chạm đất (hitInfo.point.y)
             if (hitInfo.point.y < minHeight)
             {

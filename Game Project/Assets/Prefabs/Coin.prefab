@@ -142,3 +142,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   coinValue: 1
+  pickupSound: {fileID: 8300000, guid: b2baf4a0705bff546bcc06355ab39ab1, type: 3}
+  volume: 1
