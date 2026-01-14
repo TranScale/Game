@@ -8,8 +8,8 @@ public class GameManager : MonoBehaviour
 
     [Header("UI Cần Kéo Vào")]
     public TextMeshProUGUI scoreText;
-    public GameObject winPanel;   // Kéo WinPanel vào đây
-    public GameObject losePanel;  // Kéo LosePanel vào đây
+    //public GameObject winPanel;   // Kéo WinPanel vào đây
+    //public GameObject losePanel;  // Kéo LosePanel vào đây
 
     [Header("Cài Đặt Game")]
     public int targetScore = 10; // Số điểm cần để thắng
@@ -21,58 +21,54 @@ public class GameManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
-
+    private void Start()
+    {
+        // Cập nhật lại lần nữa khi game bắt đầu chơi
+        UpdateUI();
+        Time.timeScale = 1f;
+    }
+    private void OnValidate()
+    {
+        // Nó sẽ gọi cập nhật giao diện ngay cả khi game chưa chạy
+        UpdateUI();
+    }
+    void UpdateUI()
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = "Coin: " + score + " / " + targetScore;
+        }
+    }
     public void AddScore(int amount)
     {
-        if (isGameEnded) return; // Nếu game đã kết thúc thì không tính nữa
-
+        if (isGameEnded) return;
         score += amount;
-        if (scoreText != null) scoreText.text = "Score: " + score;
+        UpdateUI();
 
-        // KIỂM TRA ĐIỀU KIỆN THẮNG
         if (score >= targetScore)
         {
-            WinGame();
+            EndGame(true); // true = Thắng
         }
     }
-
-    void WinGame()
+    void EndGame(bool isWin)
     {
         isGameEnded = true;
-        Debug.Log("Chiến thắng!");
 
-        // Hiện màn hình thắng
-        if (winPanel != null) winPanel.SetActive(true);
+        // 1. Lưu kết quả vào bộ nhớ tạm
+        // "GameResult": 1 là thắng, 0 là thua
+        PlayerPrefs.SetInt("GameResult", isWin ? 1 : 0);
 
-        // Dừng thời gian lại (Mọi thứ đứng yên)
-        Time.timeScale = 0f;
+        // 2. Có thể lưu thêm điểm số nếu muốn hiển thị bên kia
+        PlayerPrefs.SetInt("FinalScore", score);
 
-        // Phát âm thanh chiến thắng
-        if (AudioManager.instance != null)
-        {
-            AudioManager.instance.PlayWinSound();
-        }
+        // 3. Chuyển sang màn hình kết quả
+        SceneManager.LoadScene("ResultScene");
     }
-
-    public void GameOver()
+    public void GameOver() // Gọi hàm này khi nhân vật chết
     {
         if (isGameEnded) return;
-
-        isGameEnded = true;
-        Debug.Log("Thất bại!");
-        // Hiện màn hình thua
-        if (losePanel != null) losePanel.SetActive(true);
-
-        // Dừng thời gian
-        Time.timeScale = 0f;
-
-        // Phát âm thanh thua cuộc
-        if (AudioManager.instance != null)
-        {
-            AudioManager.instance.PlayLoseSound();
-        }
+        EndGame(false); // false = Thua
     }
-
     // Hàm để nút bấm gọi 
     public void RestartGame()
     {
